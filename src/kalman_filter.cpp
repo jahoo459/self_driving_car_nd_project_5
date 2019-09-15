@@ -53,6 +53,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   /**
    * TODO: update the state by using Extended Kalman Filter equations
    */
+  std::cout << "I am in UpdateEKF" <<std::endl;
   VectorXd z_pred(3);
   float px = x_[0];
   float py = x_[1];
@@ -69,23 +70,28 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
     std::cout << "UpdateEKF () - Error - Division by Zero" << std::endl;
     return;
   }
-  
+  std::cout << "Here ok 1" <<std::endl;
   z_pred[0] = c2;
   z_pred[1] = atan(py / px);
   z_pred[2] = (px * vx + py * vy) / c2;
-  
+
   if(z_pred[1] > M_PI)
     z_pred[1] = z_pred[1] - 2 * M_PI;
   if(z_pred[1] < - M_PI)  
   	z_pred[1] = z_pred[1] + 2 * M_PI;
   
   VectorXd y = z - z_pred;
+  std::cout << "Here ok 1a" <<std::endl;
   MatrixXd Ht = H_.transpose();
+  std::cout << "Here ok 1b" << Ht.rows() << "," << Ht.cols() << std::endl;
   MatrixXd S = H_ * P_ * Ht + R_;
+  std::cout << "Here ok 1c" <<std::endl;
   MatrixXd Si = S.inverse();
+  std::cout << "Here ok 1d" <<std::endl;
   MatrixXd PHt = P_ * Ht;
+  std::cout << "Here ok 1e" <<std::endl;
   MatrixXd K = PHt * Si;
-
+  std::cout << "Here ok 2" <<std::endl;
   //new estimate
   x_ = x_ + (K * y);
   long x_size = x_.size();

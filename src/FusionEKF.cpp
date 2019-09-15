@@ -109,6 +109,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 	previous_timestamp_ = measurement_pack.timestamp_;
        
     // done initializing, no need to predict or update
+    cout << "Initialization finished " << endl;
     is_initialized_ = true;
     return;
   }
@@ -123,6 +124,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    * TODO: Update the process noise covariance matrix.
    * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
+  cout << "Prediction start " << endl;
   double noise_ax = 9;
   double noise_ay = 9;
   
@@ -144,7 +146,9 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
          	  dt_3/2*noise_ax, 0, dt_2*noise_ax, 0,
          	  0, dt_3/2*noise_ay, 0, dt_2*noise_ay;
   
+  cout << "Go to prediction function" << endl;
   ekf_.Predict();
+  cout << "Prediction done " << endl;
 
   /**
    * Update
@@ -163,7 +167,10 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     //ekf_.x_[0], ekf_.x_[1], ekf_.x_[2], ekf_.x_[3];
 	input << ekf_.x_(0), ekf_.x_(1), ekf_.x_(2), ekf_.x_(3);
     Hj_ = tools.CalculateJacobian(input);
+    ekf_.H_ = MatrixXd(3, 4);
     ekf_.H_ = Hj_;
+    ekf_.R_ = MatrixXd(3, 3);
+    ekf_.R_ = R_radar_;
     VectorXd z(3);
     z << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1], measurement_pack.raw_measurements_[2];
     ekf_.UpdateEKF(z);
@@ -173,7 +180,10 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     // TODO: Laser updates
     VectorXd z(2);
 	z << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1];
+    ekf_.H_ = MatrixXd(2, 4);
     ekf_.H_ = H_laser_;
+    ekf_.R_ = MatrixXd(2, 2);
+    ekf_.R_ = R_laser_;
     ekf_.Update(z);
   }
 
