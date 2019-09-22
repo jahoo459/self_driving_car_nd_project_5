@@ -23,17 +23,11 @@ void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
 }
 
 void KalmanFilter::Predict() {
-  /**
-   * TODO: predict the state
-   */
   x_ = F_ * x_;
   P_ = F_ * P_ * F_.transpose() + Q_;
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
-  /**
-   * TODO: update the state by using Kalman Filter equations
-   */
   VectorXd z_pred = H_ * x_;
   VectorXd y = z - z_pred;
   MatrixXd Ht = H_.transpose();
@@ -50,48 +44,41 @@ void KalmanFilter::Update(const VectorXd &z) {
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
-  /**
-   * TODO: update the state by using Extended Kalman Filter equations
-   */
-  std::cout << "I am in UpdateEKF" <<std::endl;
   VectorXd z_pred(3);
   float px = x_[0];
   float py = x_[1];
   float vx = x_[2];
   float vy = x_[3];
   
-    // pre-compute a set of terms to avoid repeated calculation
+  // pre-compute a set of terms to avoid repeated calculation
   float c1 = px*px+py*py;
-  float c2 = sqrt(c1);
   
     // check division by zero
-  if (fabs(c1) < 0.0001 || px < 0.0001) 
+  if (fabs(c1) < 0.00001 || fabs(px) < 0.00001) 
   {
     std::cout << "UpdateEKF () - Error - Division by Zero" << std::endl;
     return;
   }
-  std::cout << "Here ok 1" <<std::endl;
+  
+  float c2 = sqrt(c1);
+  
   z_pred[0] = c2;
-  z_pred[1] = atan(py / px);
+  z_pred[1] = atan2(py,px);
   z_pred[2] = (px * vx + py * vy) / c2;
-
-  if(z_pred[1] > M_PI)
-    z_pred[1] = z_pred[1] - 2 * M_PI;
-  if(z_pred[1] < - M_PI)  
-  	z_pred[1] = z_pred[1] + 2 * M_PI;
   
   VectorXd y = z - z_pred;
-  std::cout << "Here ok 1a" <<std::endl;
+  
+  while(y(1) > M_PI)
+    y(1) -= 2 * M_PI;
+  while(y(1) < - M_PI)  
+  	y(1) +=  2 * M_PI;
+  
   MatrixXd Ht = H_.transpose();
-  std::cout << "Here ok 1b" << Ht.rows() << "," << Ht.cols() << std::endl;
   MatrixXd S = H_ * P_ * Ht + R_;
-  std::cout << "Here ok 1c" <<std::endl;
   MatrixXd Si = S.inverse();
-  std::cout << "Here ok 1d" <<std::endl;
   MatrixXd PHt = P_ * Ht;
-  std::cout << "Here ok 1e" <<std::endl;
   MatrixXd K = PHt * Si;
-  std::cout << "Here ok 2" <<std::endl;
+
   //new estimate
   x_ = x_ + (K * y);
   long x_size = x_.size();
